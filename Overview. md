@@ -1,0 +1,158 @@
+ZK‑Device‑Trust‑mask
+
+Device‑level trust attestation for the zk‑Mask Protocol.
+Prove that a device is legitimate, untampered, and operating within acceptable risk boundaries — without exposing raw device secrets.
+
+---
+
+Overview
+
+ZK‑Device‑Trust‑mask is the device integrity primitive in the zk‑Mask ecosystem. It collects hardware and environment signals (fingerprint, secure boot state, geolocation, patch level, etc.), computes a deterministic risk score, generates a zero‑knowledge proof of device posture, and records the attestation on‑chain. All verification flows are asynchronous and client‑side, preserving user privacy while enabling audit‑ready device access for federated intelligence, multi‑agent systems, and compliance‑sensitive operations.
+
+This mask works hand‑in‑hand with:
+
+· ZK‑Identity‑mask – binds a device to a pseudonymous identity
+· ZK‑Browser‑mask – extends device trust to browser‑based sessions
+· ZK‑Phone‑Activate‑mask – anchors the device attestation during mobile enrolment
+
+---
+
+Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                    Device / Client                        │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────────┐  │
+│  │   SDK       │  │ Risk Engine  │  │ Mobile SDK     │  │
+│  │ (Rust/TS/   │  │ (src/risk_   │  │ (React Native) │  │
+│  │  WASM/RN)   │  │   engine)    │  │                │  │
+│  └──────┬──────┘  └──────┬───────┘  └───────┬────────┘  │
+│         │                │                   │           │
+│         └────────────────┼───────────────────┘           │
+│                          │                               │
+└──────────────────────────┼───────────────────────────────┘
+                           │ Proof + Attestation
+                           ▼
+┌──────────────────────────────────────────────────────────┐
+│                 Off‑Chain Verification Daemon              │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │  Fingerprint checks · Caching · Async processing    │  │
+│  │  Environment integrity · PUF/HWRoT integration     │  │
+│  └────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌──────────────────────────────────────────────────────────┐
+│                    Solana Program                         │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │  Device trust state · Risk score · Attestation      │  │
+│  │  Compliance events · GitHub App webhooks            │  │
+│  └────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────┘
+```
+
+---
+
+What’s Inside
+
+Component Description
+Risk Scoring Engine (src/risk_engine) Deterministic scoring module. Consumes device signals and outputs a bounded trust score. Pluggable rules, extensible for custom policies.
+Off‑Chain Verification Daemon (daemon/) Async background service that performs device fingerprint verification, caches results, and acts as a ZK‑proof pre‑processor. Designed for RPC‑free, local‑first operation.
+Multi‑Language SDKs Full‑stack client libraries: Rust (core logic + WASM), TypeScript (Node.js + browser), React Native (mobile), and plain ES modules. The most complete SDK across all masks.
+Mobile Device Flow (sdk/typescript/src/mobile) Ready‑to‑use integration that collects phone hardware signals, generates proofs, and submits attestations — pairing directly with ZK‑Phone‑Activate‑mask.
+On‑Chain Program (programs/) Solana program that stores device trust state, updates risk scores, and emits events consumable by GitHub App workflows and the compliance registry.
+CI & Build Pipelines CodeQL for Rust & JS, Docker build/publish, staging & production deployment — everything needed for reproducible, audit‑ready releases.
+Docs & Examples API references, batch operation guides, a full JS GitHub Action, and end‑to‑end test suites.
+
+---
+
+Zero‑Knowledge Attestation Flow
+
+1. Signal Collection – The SDK gathers device fingerprints (OS version, TPM/secure enclave attestation, geolocation, etc.) without exposing raw hardware secrets.
+2. Risk Evaluation – The risk engine computes a trust score using a deterministic, entirely client‑side algorithm.
+3. Proof Generation – A compact ZK‑proof (e.g., a Groth16 attestation of compliance) is generated, proving that the device meets a predefined policy without revealing the underlying signals.
+4. Off‑Chain Verification – The daemon validates the proof, checks freshness, and caches the result.
+5. On‑Chain Recording – The Solana program records the proof’s nullifier, risk score, and timestamp, emitting a DeviceTrustUpdated event for downstream services.
+
+---
+
+Integration with the zk‑Mask Protocol
+
+Layer Role
+Identity Binds a device to a pseudonym without revealing the link.
+Security Delivers hardware‑anchored trust proofs (PUF, TPM, DICE).
+Compliance Issues device‑trust badges readable by the compliance registry.
+Operations Runs the verification daemon and CI/CD pipelines.
+POM Exposes device‑trust as a modular, composable capability.
+Support Provides device diagnostics and trust scoring for helpdesk.
+IT Verifies posture before granting access to corporate resources.
+Professional Services Enables device‑verified access to sensitive client systems.
+Personal Protects personal devices (including Tara’s) from compromise.
+
+---
+
+Getting Started
+
+Prerequisites
+
+· Rust 1.75+
+· Node.js 18+
+· Solana CLI 1.18+ (for on‑chain operations)
+· Docker (for daemon builds)
+
+Build All
+
+```bash
+make build
+# compiles Rust SDK, WASM, TypeScript, and mobile bindings
+```
+
+Run the Off‑Chain Daemon
+
+```bash
+cd daemon
+cargo run --release
+# listens on localhost, performs async device checks
+```
+
+Use the SDK
+
+```typescript
+import { DeviceTrustClient } from '@gitdigital/zk-device-trust-mask';
+
+const client = new DeviceTrustClient();
+const riskScore = await client.evaluateDevice();
+const proof = await client.generateAttestation();
+// submit to on‑chain program or verify via daemon
+```
+
+---
+
+CI/CD & Reproducibility
+
+The repository includes full pipelines:
+
+· CodeQL static analysis for Rust & TypeScript
+· Docker build & publish to ghcr.io
+· Staging/Production workflows with environment‑specific attestations
+  All builds are deterministic and hash‑pinned.
+
+---
+
+Documentation
+
+· API Reference
+· Example Workflows
+· Batch Operations Guide
+· GitHub Action Integration
+
+---
+
+License
+
+MIT – see LICENSE for details.
+
+---
+
+Short Description (for repo header):
+Device‑level trust attestation with zero‑knowledge proofs. Risk scoring, off‑chain daemon, multi‑platform SDKs, and on‑chain state for the zk‑Mask Protocol.
