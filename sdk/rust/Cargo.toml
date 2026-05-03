@@ -1,0 +1,26 @@
+sdk/rust/Cargo.toml
+
+```toml
+[package]
+name = "sdk-rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+risk-engine = { path = "../../risk_engine" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+# For proof generation/verification (optional)
+ark-groth16 = { version = "0.4", optional = true }
+ark-bn254 = { version = "0.4", optional = true }
+hex = { version = "0.4", optional = true }
+getrandom = { version = "0.2", features = ["js"] } # for WASM
+wasm-bindgen = { version = "0.2", optional = true }
+js-sys = { version = "0.3", optional = true }
+
+[features]
+default = ["proof"]
+proof = ["ark-groth16", "ark-bn254", "hex"]
+wasm = ["wasm-bindgen", "js-sys", "getrandom/js"]
+```
