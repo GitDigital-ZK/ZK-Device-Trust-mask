@@ -1,0 +1,32 @@
+sdk/typescript/package.json
+
+```json
+{
+  "name": "@gitdigital/zk-device-trust-mask",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for ZK‑Device‑Trust‑mask",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./mobile": "./dist/mobile/DeviceTrustModule.js"
+  },
+  "scripts": {
+    "build": "tsc && rollup -c",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@gitdigital/device-trust-wasm": "^0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3",
+    "rollup": "^4.9",
+    "@rollup/plugin-typescript": "^11.1"
+  }
+}
+```
