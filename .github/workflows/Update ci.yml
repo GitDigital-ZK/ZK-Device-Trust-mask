@@ -1,0 +1,38 @@
+.github/workflows/ci.yml
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [risk-engine, daemon, sdk-rust]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      - run: cargo clippy --all-features -- -D warnings
+        working-directory: ${{ matrix.component }}
+      - run: cargo test --all-features
+        working-directory: ${{ matrix.component }}
+
+  build-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jetli/wasm-pack-action@v0.4.0
+      - run: wasm-pack build --target web sdk/wasm
+      - run: npm ci && npm run build
+        working-directory: sdk/typescript
+
+  codeql:
+    uses: ./.github/workflows/codeql.yml
+```
