@@ -1,0 +1,15 @@
+programs/device_trust/Cargo.toml
+
+```toml
+[package]
+name = "device-trust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+anchor-lang = "0.30.0"
+solana-program = "1.18"
+```
